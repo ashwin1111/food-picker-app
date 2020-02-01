@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import axios from 'axios';
 import { css } from "@emotion/core";
 import ClipLoader from "react-spinners/DotLoader";
+import Modal from "react-awesome-modal";
 
 const override = css`
   display: block;
@@ -18,8 +19,22 @@ export default class Login extends Component {
         this.state = {
             email: '',
             password: '',
-            loading: false
+            loading: false,
+            modal : false,
+            errorMsg: 'some error occured'
         };
+    }
+
+    openModal() {
+        this.setState({
+            modal : true
+        });
+    }
+ 
+    closeModal() {
+        this.setState({
+            modal : false
+        });
     }
 
     componentDidMount() {
@@ -46,7 +61,7 @@ export default class Login extends Component {
          password: this.state.password
         };
 
-        axios.post(process.env.REACT_APP_API_URL+'/auth/login', form).then(res => {
+        axios.post(process.env.REACT_APP_API_URL_GLITCH+'/auth/login', form).then(res => {
         //axios.post('http://localhost:3000/api/auth/login', form).then(res => {
             console.log('api results:', res.data);
             if (res.data.auth === true) {
@@ -62,15 +77,31 @@ export default class Login extends Component {
                 loading: false
             });
         }).catch(err => {
-            alert('error occured while logging the user in');
-        })
+            console.log('err', err.response);
+            this.setState({
+                loading: false,
+                errorMsg: err.response.data.msg
+            });
+
+            this.openModal();
+            setTimeout(() => {
+                this.closeModal();
+            }, 3000);
+        });
     }
 
     render() {
         return (
             <div>
-            <form>
+            <form onSubmit={(values) => this.onSubmit(values)}>
                 <h3>Sign In</h3>
+                <Modal visible={this.state.modal} width="450" height="100" effect="fadeInUp" onClickAway={() => this.closeModal()}>
+                    <div className="form-group">
+                        <h1>Oops</h1>
+                        <p>{this.state.errorMsg}</p>
+                        <button className="btn btn-primary btn-block" onClick={() => this.closeModal()}>Close</button>
+                    </div>
+                </Modal>
 
                 <div className="form-group">
                     <label>Email address</label>
@@ -90,7 +121,7 @@ export default class Login extends Component {
                 </div> */}
                 <br></br>
 
-                <button type="submit" disabled={!this.state.email || !this.state.password} onClick={(e) => this.onSubmit(e)} onSubmit={(values) => this.onSubmit(values)} className="btn btn-primary btn-block">Submit</button>
+                <button type="submit" disabled={!this.state.email || !this.state.password} onClick={(e) => this.onSubmit(e)} className="btn btn-primary btn-block">Submit</button>
 
                 <p className="forgot-password text-right">
                     New user <a href="/sign-up">sign up?</a>
